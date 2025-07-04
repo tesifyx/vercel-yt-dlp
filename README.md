@@ -39,7 +39,14 @@ A powerful REST API for downloading YouTube videos with multiple format options 
 5. Add environment variable: `SESSION_SECRET=your-random-secret-key`
 6. Deploy and your serverless API will be live!
 
-**✅ Serverless Optimized:** This application is fully optimized for serverless deployment. Direct downloads are replaced with download links for better performance and reliability.
+**✅ Serverless Optimized:** This application includes a specialized serverless version in the `/api` directory that's optimized for Vercel deployment. The serverless version provides download links instead of direct file streams for better performance and reliability.
+
+**📁 File Structure for Serverless:**
+```
+/api/index.py          # Serverless Flask application
+/api/requirements.txt  # Python dependencies for serverless
+/vercel.json          # Vercel deployment configuration
+```
 
 ### Local Development
 ```bash

@@ -1,25 +1,59 @@
 import os
 import logging
-from flask import Flask, jsonify, request, render_template, send_file, abort
-from werkzeug.middleware.proxy_fix import ProxyFix
-import sys
+import re
 import tempfile
-import uuid
 from urllib.parse import urlparse
-
-# Add parent directory to path to import youtube_service
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from youtube_service import YouTubeService
+from flask import Flask, jsonify, request, render_template
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
+# Create Flask app with proper template and static folder paths
 app = Flask(__name__, 
     template_folder=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'templates'),
     static_folder=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static')
 )
 app.secret_key = os.environ.get("SESSION_SECRET", "youtube-downloader-secret-key")
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+# Simple YouTube service for serverless environment
+class YouTubeService:
+    def __init__(self):
+        self.temp_dir = tempfile.mkdtemp()
+        logging.info(f"YouTube service initialized with temp dir: {self.temp_dir}")
+    
+    def is_valid_youtube_url(self, url):
+        youtube_regex = re.compile(
+            r'(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/'
+            r'(watch\?v=|embed/|v/|.+\?v=)?([^&=%\?]{11})'
+        )
+        return bool(youtube_regex.match(url))
+    
+    def get_video_info(self, url):
+        try:
+            import yt_dlp
+            ydl_opts = {
+                'quiet': True,
+                'no_warnings': True,
+                'extract_flat': False,
+            }
+            
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+                if not info:
+                    raise Exception("Could not extract video information")
+                
+                return {
+                    'title': info.get('title', 'Unknown'),
+                    'channel': info.get('uploader', 'Unknown'),
+                    'duration': info.get('duration', 0),
+                    'view_count': info.get('view_count', 0),
+                    'description': info.get('description', ''),
+                    'thumbnail': info.get('thumbnail', ''),
+                    'formats': info.get('formats', [])
+                }
+        except Exception as e:
+            logging.error(f"Error extracting video info: {e}")
+            raise
 
 # Initialize YouTube service
 youtube_service = YouTubeService()
@@ -54,39 +88,6 @@ def get_video_info():
     
     except Exception as e:
         logging.error(f"Error getting video info: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@app.route('/api/download')
-def download_video():
-    """Download video or audio in specified format"""
-    try:
-        url = request.args.get('url')
-        quality = request.args.get('quality', '720p')
-        audio_only = request.args.get('audio_only', 'false').lower() == 'true'
-        
-        if not url:
-            return jsonify({
-                'success': False,
-                'error': 'URL parameter is required'
-            }), 400
-        
-        if not youtube_service.is_valid_youtube_url(url):
-            return jsonify({
-                'success': False,
-                'error': 'Invalid YouTube URL'
-            }), 400
-        
-        # For serverless, we'll return a download link instead of streaming the file
-        return jsonify({
-            'success': False,
-            'error': 'Direct download not supported in serverless mode. Use /api/download-link instead.'
-        }), 400
-        
-    except Exception as e:
-        logging.error(f"Error downloading video: {str(e)}")
         return jsonify({
             'success': False,
             'error': str(e)
@@ -245,10 +246,6 @@ def internal_error(error):
         'success': False,
         'error': 'Internal server error'
     }), 500
-
-# For Vercel serverless deployment
-def handler(event, context):
-    return app(event, context)
 
 # For local development
 if __name__ == '__main__':
