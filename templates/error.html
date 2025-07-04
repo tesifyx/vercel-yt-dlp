@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Error - YouTube Downloader{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-exclamation-triangle text-warning fa-3x mb-3"></i>
+                <h3 class="card-title">Something went wrong</h3>
+                <p class="card-text text-muted">{{ error or "An unexpected error occurred" }}</p>
+                <a href="/" class="btn btn-primary">
+                    <i class="fas fa-home me-2"></i>
+                    Go Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

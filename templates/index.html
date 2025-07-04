@@ -1,0 +1,403 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Hero Section -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-download me-2"></i>
+                    YouTube Downloader API
+                </h3>
+            </div>
+            <div class="card-body">
+                <p class="lead">
+                    A powerful serverless REST API for downloading YouTube videos with multiple format options and comprehensive metadata extraction. Deployed on Vercel for global edge performance.
+                </p>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-primary bg-opacity-10 border-primary">
+                            <div class="card-body text-center">
+                                <i class="fas fa-video fa-2x text-primary mb-2"></i>
+                                <h5>Multiple Formats</h5>
+                                <p class="small">MP4 from 144p to 1080p</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-success bg-opacity-10 border-success">
+                            <div class="card-body text-center">
+                                <i class="fas fa-music fa-2x text-success mb-2"></i>
+                                <h5>Audio Only</h5>
+                                <p class="small">MP3 128kbps - 320kbps</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-info bg-opacity-10 border-info">
+                            <div class="card-body text-center">
+                                <i class="fas fa-info-circle fa-2x text-info mb-2"></i>
+                                <h5>Rich Metadata</h5>
+                                <p class="small">Title, views, duration, etc.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Start -->
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-rocket me-2"></i>Quick Start</h6>
+                    <p class="mb-0">Use the test interface on the right to try the API, or make direct requests to the endpoints below.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Documentation -->
+        <div class="card mt-4" id="api-docs">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-book me-2"></i>
+                    API Documentation
+                </h4>
+            </div>
+            <div class="card-body">
+                
+                <!-- Get Video Info -->
+                <div class="card endpoint-card mb-4">
+                    <div class="card-header bg-primary bg-opacity-10">
+                        <h5 class="mb-0">
+                            <span class="badge bg-primary me-2">GET</span>
+                            /api/video-info
+                        </h5>
+                        <small class="text-muted">Get comprehensive video information and available formats</small>
+                    </div>
+                    <div class="card-body">
+                        <h6>Parameters:</h6>
+                        <ul>
+                            <li><code>url</code> (required): YouTube video URL</li>
+                        </ul>
+                        
+                        <h6>Example Request:</h6>
+                        <div class="code-block">
+GET /api/video-info?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ
+                        </div>
+                        
+                        <h6>Response Format:</h6>
+                        <div class="code-block">
+{
+  "success": true,
+  "data": {
+    "title": "Rick Astley - Never Gonna Give You Up",
+    "channel": "Rick Astley",
+    "duration": 213,
+    "view_count": 1500000000,
+    "thumbnail": "https://...",
+    "formats": {
+      "video": [
+        {
+          "format_id": "18",
+          "quality_label": "360p",
+          "ext": "mp4",
+          "url": "https://...",
+          "filesize": 15728640
+        }
+      ],
+      "audio": {
+        "format_id": "140",
+        "quality_label": "128kbps",
+        "ext": "m4a",
+        "url": "https://...",
+        "filesize": 3145728
+      }
+    }
+  }
+}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Get Download Link -->
+                <div class="card endpoint-card mb-4">
+                    <div class="card-header bg-success bg-opacity-10">
+                        <h5 class="mb-0">
+                            <span class="badge bg-success me-2">GET</span>
+                            /api/download-link
+                        </h5>
+                        <small class="text-muted">Get direct download link for serverless compatibility</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Serverless Mode:</strong> Direct file downloads are replaced with download links for better serverless performance and compatibility.
+                        </div>
+                        
+                        <h6>Parameters:</h6>
+                        <ul>
+                            <li><code>url</code> (required): YouTube video URL</li>
+                            <li><code>quality</code> (optional): 144p, 240p, 360p, 480p, 720p, 1080p (default: 720p)</li>
+                            <li><code>audio_only</code> (optional): true/false (default: false)</li>
+                        </ul>
+                        
+                        <h6>Example Requests:</h6>
+                        <div class="code-block">
+# Get 720p video download link
+GET /api/download-link?url=VIDEO_URL&quality=720p
+
+# Get audio-only download link
+GET /api/download-link?url=VIDEO_URL&audio_only=true
+                        </div>
+                        
+                        <h6>Response Format:</h6>
+                        <div class="code-block">
+{
+  "success": true,
+  "data": {
+    "download_url": "https://...",
+    "filename": "video.mp4",
+    "format": "720p mp4",
+    "quality": "720p",
+    "size": 15728640
+  }
+}
+                        </div>
+                        
+                        <h6>Response:</h6>
+                        <p>Returns the file as a download attachment with proper filename and mimetype.</p>
+                    </div>
+                </div>
+
+                <!-- Download Link -->
+                <div class="card endpoint-card mb-4">
+                    <div class="card-header bg-info bg-opacity-10">
+                        <h5 class="mb-0">
+                            <span class="badge bg-info me-2">GET</span>
+                            /api/download-link
+                        </h5>
+                        <small class="text-muted">Get direct download URL (expires in 6 hours)</small>
+                    </div>
+                    <div class="card-body">
+                        <h6>Parameters:</h6>
+                        <ul>
+                            <li><code>url</code> (required): YouTube video URL</li>
+                            <li><code>quality</code> (optional): 144p, 240p, 360p, 480p, 720p, 1080p</li>
+                            <li><code>audio_only</code> (optional): true/false</li>
+                        </ul>
+                        
+                        <h6>Response:</h6>
+                        <div class="code-block">
+{
+  "success": true,
+  "download_url": "https://direct.youtube.url/...",
+  "filename": "video_title.mp4",
+  "filesize": 15728640,
+  "expires_in": "6 hours"
+}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Link -->
+                <div class="card endpoint-card mb-4">
+                    <div class="card-header bg-warning bg-opacity-10">
+                        <h5 class="mb-0">
+                            <span class="badge bg-warning text-dark me-2">GET</span>
+                            /api/create-preview-link
+                        </h5>
+                        <small class="text-muted">Create a preview page with embedded video player</small>
+                    </div>
+                    <div class="card-body">
+                        <h6>Parameters:</h6>
+                        <ul>
+                            <li><code>url</code> (required): YouTube video URL</li>
+                        </ul>
+                        
+                        <h6>Response:</h6>
+                        <div class="code-block">
+{
+  "success": true,
+  "preview_url": "https://your-domain.com/video/dQw4w9WgXcQ",
+  "video_id": "dQw4w9WgXcQ",
+  "original_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+}
+                        </div>
+                        
+                        <p><strong>Preview page features:</strong></p>
+                        <ul class="small">
+                            <li>Embedded YouTube video player</li>
+                            <li>Video metadata display</li>
+                            <li>Multiple download options</li>
+                            <li>Direct download buttons</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Error Handling -->
+                <div class="card endpoint-card">
+                    <div class="card-header bg-danger bg-opacity-10">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Error Handling
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p>All endpoints return consistent error responses:</p>
+                        <div class="code-block">
+{
+  "success": false,
+  "error": "Error description here"
+}
+                        </div>
+                        
+                        <h6>Common HTTP Status Codes:</h6>
+                        <ul>
+                            <li><code>400</code>: Bad Request (invalid URL, missing parameters)</li>
+                            <li><code>404</code>: Not Found (invalid endpoint)</li>
+                            <li><code>500</code>: Internal Server Error (processing failed)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Testing Interface -->
+    <div class="col-lg-4">
+        <div class="card" id="test-interface">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-flask me-2"></i>
+                    API Test Interface
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Quick Test Buttons -->
+                <div class="mb-3">
+                    <h6>Quick Tests:</h6>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="testVideoInfo">
+                            <i class="fas fa-info-circle me-1"></i> Test Video Info
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-sm" id="testDownloadLink">
+                            <i class="fas fa-link me-1"></i> Test Download Link
+                        </button>
+                        <button type="button" class="btn btn-outline-warning btn-sm" id="testPreviewLink">
+                            <i class="fas fa-eye me-1"></i> Test Preview Link
+                        </button>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Custom Test Form -->
+                <form id="testForm">
+                    <div class="mb-3">
+                        <label for="videoUrl" class="form-label">YouTube URL:</label>
+                        <input type="url" class="form-control" id="videoUrl" placeholder="https://www.youtube.com/watch?v=..." required>
+                        <button type="button" class="btn btn-outline-secondary btn-sm mt-2 w-100" id="useExampleUrl">
+                            <i class="fas fa-magic me-1"></i> Use Example URL
+                        </button>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="action" class="form-label">Action:</label>
+                        <select class="form-select" id="action">
+                            <option value="info">Get Video Info</option>
+                            <option value="download-link">Get Download Link</option>
+                            <option value="preview-link">Create Preview Link</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3" id="qualityGroup">
+                        <label for="quality" class="form-label">Quality:</label>
+                        <select class="form-select" id="quality">
+                            <option value="720p">720p (HD)</option>
+                            <option value="1080p">1080p (Full HD)</option>
+                            <option value="480p">480p</option>
+                            <option value="360p">360p</option>
+                            <option value="240p">240p</option>
+                            <option value="144p">144p</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="audioOnly">
+                            <label class="form-check-label" for="audioOnly">
+                                Audio Only (MP3)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-play me-2"></i>
+                        Test API
+                    </button>
+                </form>
+                
+                <div id="loadingSpinner" class="text-center mt-3 d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Processing request...</p>
+                </div>
+
+                <!-- Usage Stats -->
+                <div class="mt-4">
+                    <h6>API Usage:</h6>
+                    <div class="small text-muted">
+                        <p><i class="fas fa-clock me-1"></i> Response time: <span id="responseTime">-</span>ms</p>
+                        <p><i class="fas fa-check-circle me-1"></i> Last test: <span id="lastTest">Never</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Response Display -->
+        <div class="card mt-4" id="responseCard" style="display: none;">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-code me-2"></i>
+                    API Response
+                </h5>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="copyResponse">
+                    <i class="fas fa-copy me-1"></i> Copy
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="responseContent" class="json-response"></div>
+            </div>
+        </div>
+
+        <!-- Deployment Info -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cloud me-2"></i>
+                    Deployment Options
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">Deploy this API to:</p>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary btn-sm" onclick="window.open('https://docs.replit.com/cloud-services/deployments', '_blank')">
+                        <i class="fas fa-rocket me-1"></i> Replit Deployments (Recommended)
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="window.open('https://railway.app', '_blank')">
+                        <i class="fas fa-train me-1"></i> Railway.com
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="window.open('https://vercel.com', '_blank')">
+                        <i class="fas fa-globe me-1"></i> Vercel.com
+                    </button>
+                </div>
+                <p class="small text-muted mt-2">
+                    <i class="fas fa-info-circle me-1"></i> 
+                    All deployment configurations are included in this project.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

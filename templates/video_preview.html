@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}{{ video.title }} - YouTube Downloader{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Video Player Section -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="ratio ratio-16x9 mb-3">
+                    <iframe 
+                        src="https://www.youtube.com/embed/{{ video_id }}" 
+                        title="{{ video.title }}"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                
+                <h2 class="h4 mb-3">{{ video.title }}</h2>
+                
+                <div class="row text-muted small mb-3">
+                    <div class="col-md-6">
+                        <i class="fas fa-user me-1"></i> {{ video.channel }}
+                    </div>
+                    <div class="col-md-6">
+                        <i class="fas fa-clock me-1"></i> {{ (video.duration // 60) }}:{{ '%02d' % (video.duration % 60) }}
+                    </div>
+                </div>
+                
+                <div class="row text-muted small mb-3">
+                    <div class="col-md-6">
+                        <i class="fas fa-eye me-1"></i> {{ "{:,}".format(video.view_count) if video.view_count else 'N/A' }} views
+                    </div>
+                    <div class="col-md-6">
+                        <i class="fas fa-thumbs-up me-1"></i> {{ "{:,}".format(video.like_count) if video.like_count else 'N/A' }} likes
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Description Section -->
+        {% if video.description %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Description
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">{{ video.description[:500] }}{% if video.description|length > 500 %}...{% endif %}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Download Options -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-download me-2"></i>
+                    Download Options
+                </h5>
+            </div>
+            <div class="card-body">
+                
+                <!-- Video Download Options -->
+                {% if video.formats.video %}
+                <h6 class="text-primary">
+                    <i class="fas fa-video me-1"></i>
+                    Video Formats
+                </h6>
+                
+                {% for format in video.formats.video %}
+                    <div class="d-grid gap-2 mb-2">
+                        <button class="btn btn-outline-primary btn-sm download-btn" 
+                                data-url="{{ video.webpage_url }}" 
+                                data-quality="{{ format.quality_label }}" 
+                                data-audio-only="false">
+                            <i class="fas fa-download me-1"></i>
+                            {{ format.quality_label }} ({{ format.ext }})
+                            {% if format.type == 'video_only' %}
+                                <span class="badge bg-warning">No Audio</span>
+                            {% endif %}
+                            {% if format.filesize %}
+                                <br><small>({{ "%.1f"|format(format.filesize / 1024 / 1024) }} MB)</small>
+                            {% endif %}
+                        </button>
+                    </div>
+                {% endfor %}
+                
+                <hr>
+                {% endif %}
+                
+                <!-- Audio Download Options -->
+                {% if video.formats.audio %}
+                <h6 class="text-success">
+                    <i class="fas fa-music me-1"></i>
+                    Audio Only
+                </h6>
+                
+                {% for format in video.formats.audio %}
+                    <div class="d-grid gap-2 mb-2">
+                        <button class="btn btn-outline-success btn-sm download-btn" 
+                                data-url="{{ video.webpage_url }}" 
+                                data-quality="{{ format.quality_label }}" 
+                                data-audio-only="true">
+                            <i class="fas fa-download me-1"></i>
+                            {{ format.quality_label }} ({{ format.ext }})
+                            {% if format.filesize %}
+                                <br><small>({{ "%.1f"|format(format.filesize / 1024 / 1024) }} MB)</small>
+                            {% endif %}
+                        </button>
+                    </div>
+                {% endfor %}
+                
+                {% endif %}
+                    <div class="d-grid gap-2 mb-2">
+                        <button class="btn btn-outline-success btn-sm download-btn" 
+                                data-url="{{ video.webpage_url }}" 
+                                data-quality="{{ format.format_note }}" 
+                                data-audio-only="true">
+                            <i class="fas fa-download me-1"></i>
+                            {{ format.format_note }}
+                            {% if format.filesize %}
+                                ({{ "%.1f"|format(format.filesize / 1024 / 1024) }} MB)
+                            {% endif %}
+                        </button>
+                    </div>
+                {% endfor %}
+                {% endif %}
+                
+                <hr>
+                
+                <!-- Get Download Link -->
+                <h6 class="text-info">
+                    <i class="fas fa-link me-1"></i>
+                    Get Download Link
+                </h6>
+                
+                <div class="mb-3">
+                    <select class="form-select form-select-sm" id="linkQuality">
+                        <option value="720p">720p Video</option>
+                        <option value="1080p">1080p Video</option>
+                        <option value="480p">480p Video</option>
+                        <option value="360p">360p Video</option>
+                        <option value="audio">Audio Only</option>
+                    </select>
+                </div>
+                
+                <div class="d-grid">
+                    <button class="btn btn-info btn-sm" id="getLinkBtn" data-url="{{ video.webpage_url }}">
+                        <i class="fas fa-link me-1"></i>
+                        Get Download Link
+                    </button>
+                </div>
+                
+                <div id="downloadLink" class="mt-3" style="display: none;">
+                    <div class="alert alert-info">
+                        <strong>Download Link:</strong>
+                        <a href="#" id="linkUrl" target="_blank" class="text-break"></a>
+                        <small class="d-block mt-1 text-muted">Link expires in 6 hours</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="text-center mt-3" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 small">Processing download...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const downloadButtons = document.querySelectorAll('.download-btn');
+    const getLinkBtn = document.getElementById('getLinkBtn');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const downloadLinkDiv = document.getElementById('downloadLink');
+    const linkUrl = document.getElementById('linkUrl');
+    
+    // Handle direct download buttons
+    downloadButtons.forEach(button => {
+        button.addEventListener('click', async function() {
+            const url = this.dataset.url;
+            const quality = this.dataset.quality;
+            const audioOnly = this.dataset.audioOnly === 'true';
+            
+            // Show loading
+            loadingSpinner.style.display = 'block';
+            this.disabled = true;
+            
+            try {
+                const params = new URLSearchParams({
+                    url: encodeURIComponent(url),
+                    quality: quality,
+                    audio_only: audioOnly
+                });
+                
+                const response = await fetch(`/api/download?${params.toString()}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/octet-stream',
+                    }
+                });
+                
+                if (response.ok) {
+                    // Create blob and download
+                    const blob = await response.blob();
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = `video_${quality}.${audioOnly ? 'mp3' : 'mp4'}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(downloadUrl);
+                    document.body.removeChild(a);
+                } else {
+                    alert('Download failed. Please try again.');
+                }
+                
+            } catch (error) {
+                console.error('Download error:', error);
+                alert('Download failed: ' + error.message);
+            } finally {
+                loadingSpinner.style.display = 'none';
+                this.disabled = false;
+            }
+        });
+    });
+    
+    // Handle get download link button
+    getLinkBtn.addEventListener('click', async function() {
+        const url = this.dataset.url;
+        const qualitySelect = document.getElementById('linkQuality');
+        const selectedQuality = qualitySelect.value;
+        const audioOnly = selectedQuality === 'audio';
+        const quality = audioOnly ? '192kbps' : selectedQuality;
+        
+        // Show loading
+        loadingSpinner.style.display = 'block';
+        this.disabled = true;
+        downloadLinkDiv.style.display = 'none';
+        
+        try {
+            const params = new URLSearchParams({
+                url: encodeURIComponent(url),
+                quality: quality,
+                audio_only: audioOnly
+            });
+            
+            const response = await fetch(`/api/download-link?${params.toString()}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                linkUrl.href = data.download_url;
+                linkUrl.textContent = data.filename;
+                downloadLinkDiv.style.display = 'block';
+            } else {
+                alert('Failed to get download link: ' + data.error);
+            }
+            
+        } catch (error) {
+            console.error('Link generation error:', error);
+            alert('Failed to get download link: ' + error.message);
+        } finally {
+            loadingSpinner.style.display = 'none';
+            this.disabled = false;
+        }
+    });
+});
+</script>
+{% endblock %}
